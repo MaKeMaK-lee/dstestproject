@@ -1,0 +1,14 @@
+﻿
+@{
+    ViewData["Title"] = "Weather Archives Upload";
+}
+
+<h1>Загрузка архивов</h1>
+
+<h3>Выберите файл для загрузки</h3>
+
+<form method="post" asp-action="Upload" asp-controller="WeatherData" enctype="multipart/form-data">
+    <input class="input" type="file" name="files" multiple />
+    <br/>
+    <input class="input marnext" type="submit" value="Загрузить" />
+</form>
