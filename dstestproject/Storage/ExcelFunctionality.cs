@@ -148,7 +148,12 @@ namespace dstestproject.Storage
                                     currentCellText = Convert.ToString(row[10]).Trim();
                                     if (!Int32.TryParse(currentCellText, out int a))
                                     {
-                                        if (currentCellText.ToLower().Contains("менее"))
+                                        if (string.IsNullOrEmpty(currentCellText))
+                                        {
+                                            tmpWeatherElement.HorizontalVisibilityInteger = -1;
+                                            tmpWeatherElement.HorizontalVisibilityFractional = -1;
+                                        }
+                                        else if (currentCellText.ToLower().Contains("менее"))
                                         {
                                             currentCellText = Regex.Match(currentCellText, @"\d+").Value;
 
@@ -215,20 +220,12 @@ namespace dstestproject.Storage
                             }
                         }
                     }
-
-
-
-
-
-
                 }
+
+                //TODO: delete file
             }
 
             return Task.FromResult(newList);
-
-
-
-
         }
     }
 }

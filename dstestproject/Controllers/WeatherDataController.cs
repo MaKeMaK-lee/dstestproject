@@ -1,6 +1,7 @@
 ﻿using dstestproject.Managers.WeatherElements;
 using dstestproject.Storage;
 using dstestproject.Storage.Entity;
+using dstestproject.Storage.StringShortNamedModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -40,7 +41,7 @@ namespace dstestproject.Controllers
                 intYear = DateTime.Now.Year;
                 intMonth = DateTime.Now.Month;
 
-                if (!yearsInDatabase.Contains(intYear))
+                if (yearsInDatabase.Count() > 0 && !yearsInDatabase.Contains(intYear))
                 {
                     intYear = yearsInDatabase.OrderBy(y => Math.Abs(y - intYear)).First();
                 }
@@ -49,7 +50,7 @@ namespace dstestproject.Controllers
                 .Select(weatherElement => weatherElement.Date.Month)
                 .Distinct()
                 .ToList();
-                if (!monthsUsed.Contains(intMonth))
+                if (monthsUsed.Count() > 0 && !monthsUsed.Contains(intMonth))
                 {
                     intMonth = monthsUsed.OrderBy(m => Math.Abs(m - intMonth)).First();
                 }
@@ -72,7 +73,7 @@ namespace dstestproject.Controllers
                     "November" => 11,
                     "December" => 12
                 };
-                    intYear = Convert.ToInt32(year);
+                intYear = Convert.ToInt32(year);
             }
 
             try
@@ -126,5 +127,62 @@ namespace dstestproject.Controllers
                 return View();
             }
         }
+        [HttpGet]
+        public async Task<ActionResult<WeatherElementStringShortNamedUnit>> GetJSONWeatherElementsListFilteredBy(string year, string navigationMethod, string month)
+        {
+            try
+            {
+                int intMonth, intYear;
+
+                if (!int.TryParse(year, out intYear))
+                    return null;
+                if (string.IsNullOrEmpty(month))
+                    return null;
+                if (string.IsNullOrEmpty(navigationMethod))
+                    return null;
+                if (navigationMethod != "month" && navigationMethod != "year")
+                    return null;
+                intMonth = month switch
+                {
+                    "January" => 1,
+                    "February" => 2,
+                    "March" => 3,
+                    "April" => 4,
+                    "May" => 5,
+                    "June" => 6,
+                    "July" => 7,
+                    "August" => 8,
+                    "September" => 9,
+                    "October" => 10,
+                    "November" => 11,
+                    "December" => 12,
+                    _ => 0
+                };
+                if (intMonth < 1 || 12 < intMonth)
+                    return null;
+
+                if (navigationMethod == "month")
+                {
+                    IEnumerable<WeatherElement> entities = await _manager.GetFilteredByMonth(intYear, intMonth);
+                    return Ok(entities.Select(e => (WeatherElementStringShortNamedUnit)e).ToList());
+                }
+                else
+                {
+                    IEnumerable<WeatherElement> entities = await _manager.GetFilteredByYear(intYear);
+                    return Ok(entities.Select(e => (WeatherElementStringShortNamedUnit)e).ToList());
+                }
+
+            }
+            catch
+            {
+                return null;
+            }
+
+
+        }
+
+
+
+
     }
 }

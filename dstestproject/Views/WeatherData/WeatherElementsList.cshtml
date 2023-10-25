@@ -50,7 +50,85 @@
 
 @section Scripts {
     <script type="text/javascript">
-        $(document).ready(function () {
+
+        function row(we) {
+
+            const tr = document.createElement("tr");
+
+            const dateTd = document.createElement("td");
+            dateTd.append(we.d);
+            tr.append(dateTd);
+
+            const timeTd = document.createElement("td");
+            timeTd.append(we.t);
+            tr.append(timeTd);
+
+            const teTd = document.createElement("td");
+            teTd.append(we.te);
+            tr.append(teTd);
+
+            const hTd = document.createElement("td");
+            hTd.append(we.h);
+            tr.append(hTd);
+
+            const dpTd = document.createElement("td");
+            dpTd.append(we.dp);
+            tr.append(dpTd);
+
+            const pTd = document.createElement("td");
+            pTd.append(we.p);
+            tr.append(pTd);
+
+            const wTd = document.createElement("td");
+            wTd.append(we.w);
+            tr.append(wTd);
+
+            const cTd = document.createElement("td");
+            cTd.append(we.c);
+            tr.append(cTd);
+
+            const chTd = document.createElement("td");
+            chTd.append(we.ch);
+            tr.append(chTd);
+
+            const hvTd = document.createElement("td");
+            hvTd.append(we.hv);
+            tr.append(hvTd);
+
+            const wpTd = document.createElement("td");
+            wpTd.append(we.wp);
+            wpTd.classList.add("textleft");
+            tr.append(wpTd);
+
+            return tr;
+        }
+
+        function RefreshWeatherElementsListFilteredByCurrentValues() {
+            let navigationMethod = $('input[type=radio][name=navigationMethod]:checked').val();
+            let year = $("#yearSelect").val();
+            let month = $("#monthSelect").val();
+            const urlString = "https://localhost:44398/WeatherData/GetJSONWeatherElementsListFilteredBy?" +
+                "navigationMethod=" + navigationMethod + "&" +
+                "year=" + year + "&" +
+                "month=" + month;
+            const request = new Request(urlString);
+            fetch(request)
+                .then(response => response.json())
+                .then(data => {
+                    let table = $("#weatherElenemtsTable");
+                    $("#weatherElenemtsTable tbody tr").remove();
+                    data.forEach(we => {
+                        table.append(row(we));
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+
+        }
+
+
+        $(document).ready(async function () {
             $('input[type=radio][name=navigationMethod]').change(function () {
                 if (this.value == 'month') {
                     $("#monthSelect").show();
@@ -59,6 +137,9 @@
                 else if (this.value == 'year') {
                     $("#monthSelect").hide();
                 }
+            });
+            $("#loadElementsButton").click(async function () {
+                await RefreshWeatherElementsListFilteredByCurrentValues();
             });
 
 
@@ -69,6 +150,11 @@
 
             $("#@(monthsUsedMoreThanOne? "radioYear" : "radioMonth")").prop("checked", true);
 
+
+
+
+            await RefreshWeatherElementsListFilteredByCurrentValues();
+
         });
     </script>
 }
@@ -77,8 +163,8 @@
 <table class="">
     <tr class="withoutborder">
         <td class="withoutborder">
-            @using (Html.BeginForm("WeatherElementsList", "WeatherData", FormMethod.Get))
-            {
+            @*using (Html.BeginForm("WeatherElementsList", "WeatherData", FormMethod.Get))*@
+            @{
                 <table class="withoutborder">
                     <tr class="withoutborder">
                         <td class="withoutborder acrossinputradio" style="text-align: right">
@@ -93,7 +179,6 @@
                             </select>
                         </td>
                         <td class="withoutborder">
-
                         </td>
                     </tr>
                     <tr class="withoutborder">
@@ -101,7 +186,7 @@
                             за месяц <input type="radio" name="navigationMethod" value="month" id="radioMonth" checked />
                         </td>
                         <td class="withoutborder">
-                            <select class="input min-width-120" id="monthSelect" @(monthsUsedMoreThanOne?"hidden=\"hidden\"":"") name="month">
+                            <select class="input min-width-120" id="monthSelect" @(monthsUsedMoreThanOne ? "hidden=\"hidden\"" : "") name="month">
                                 <option value="January">Январь</option>
                                 <option value="February">Февраль</option>
                                 <option value="March">Март</option>
@@ -117,8 +202,8 @@
                             </select>
                         </td>
                         <td class="withoutborder">
-                            <input class="input" type="submit" value="⭸" />
-                        </td>
+                            <button id="loadElementsButton" class="input">⭸</button>
+</td>
                     </tr>
                 </table>
             }
@@ -129,7 +214,7 @@
 
 <div class="scrollable tableouterborder center maxh-700">
 
-    <table class="table scrollable">
+    <table class="" id="weatherElenemtsTable">
         <thead>
             <tr>
                 <th>
@@ -142,7 +227,7 @@
                     температура<br />воздуха, ℃
                 </th>
                 <th>
-                    влажность<br/>воздуха, %
+                    влажность<br />воздуха, %
                 </th>
                 <th>
                     точка<br />росы, ℃
@@ -167,45 +252,297 @@
                 </th>
             </tr>
         </thead>
-        <tbody>
-            @foreach (var modelItem in Model.list)
+        <tbody class="">
+            @*@foreach (var modelItem in Model.list.Select(we => (dstestproject.Storage.StringShortNamedModels.WeatherElementStringShortNamedUnit)we))
             {
-            <tr>
-                <td>
-                    @(modelItem.Date.ToShortDateString())
-                </td>
-                <td>
-                    @(modelItem.Date.ToShortTimeString())
-                </td>
-                <td>
-                    @(modelItem.TemperatureInteger)@(modelItem.TemperatureFractional==0?"":","+ modelItem.TemperatureFractional)    
-                </td>
-                <td>
-                    @(modelItem.HumidityInteger)@(modelItem.HumidityFractional == 0 ? "" : "," + modelItem.HumidityFractional)
-                </td>
-                <td>
-                    @(modelItem.DewPointInteger)@(modelItem.DewPointFractional == 0 ? "" : "," + modelItem.DewPointFractional)
-                </td>
-                <td>
-                    @(modelItem.Pressure)
-                </td>
-                <td>
-                    @(modelItem.WindSpeedInteger == 0 && modelItem.WindSpeedFractional == 0 ? "" : modelItem.WindSpeedInteger)@(modelItem.WindSpeedFractional == 0 ? "" : "," + modelItem.WindSpeedFractional)@(" " + modelItem.WindDirections)
-                </td>
-                <td>
-                    @(modelItem.Cloudy)
-                </td>
-                <td>
-                    @(modelItem.CloudHeight)
-                </td>
-                <td>
-                    @(modelItem.HorizontalVisibilityInteger)@(modelItem.HorizontalVisibilityFractional == 0 ? "" : "," + modelItem.HorizontalVisibilityFractional)
-                </td>
-                <td class="textleft">
-                    @(modelItem.WeatherPhenomenon)
-                </td>
-            </tr>
-            }
+                <tr>
+                    <td>
+                        @modelItem.D
+                    </td>
+                    <td>
+                        @modelItem.T
+                    </td>
+                    <td>
+                        @modelItem.Te
+                    </td>
+                    <td>
+                        @modelItem.H
+                    </td>
+                    <td>
+                        @modelItem.DP
+                    </td>
+                    <td>
+                        @modelItem.P
+                    </td>
+                    <td>
+                        @modelItem.W
+                    </td>
+                    <td>
+                        @modelItem.C
+                    </td>
+                    <td>
+                        @modelItem.CH
+                    </td>
+                    <td>
+                        @modelItem.HV
+                    </td>
+                    <td class="textleft">
+                        @modelItem.WP
+                    </td>
+                </tr>
+            }*@
         </tbody>
     </table>
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@*@model (IEnumerable<dstestproject.Storage.Entity.WeatherElement> list, IEnumerable<int> yearsInDatabase)
+    @{
+        string modelStartMonth;
+        bool modelListIsEmpty = Model.list.Count() < 1;
+        bool monthsUsedMoreThanOne;
+
+
+        if (!modelListIsEmpty)
+        {
+            var mu = Model.list
+                   .Select(weatherElement => weatherElement.Date.Month)
+                   .Distinct()
+                   .ToList();
+            if (mu.Count > 1)
+                monthsUsedMoreThanOne = true;
+            else
+                monthsUsedMoreThanOne = false;
+        }
+        else
+            monthsUsedMoreThanOne = false;
+
+        if (!modelListIsEmpty)
+            modelStartMonth = Model.list.First().Date.Month switch
+            {
+                1 => "January",
+                2 => "February",
+                3 => "March",
+                4 => "April",
+                5 => "May",
+                6 => "June",
+                7 => "July",
+                8 => "August",
+                9 => "September",
+                10 => "October",
+                11 => "November",
+                12 => "December"
+            };
+        else
+            modelStartMonth = "January";
+
+        ViewData["Title"] = "Weather archive browse";
+
+        //Layout = null;
+    }
+
+    @section Styles {
+        <style type="text/css">
+        </style>
+    }
+
+    @section Scripts {
+        <script type="text/javascript">
+            $(document).ready(function () {
+                $('input[type=radio][name=navigationMethod]').change(function () {
+                    if (this.value == 'month') {
+                        $("#monthSelect").show();
+                        $("#monthSelect").removeAttr('hidden');
+                    }
+                    else if (this.value == 'year') {
+                        $("#monthSelect").hide();
+                    }
+                });
+
+
+
+                $("#yearSelect").val("@(modelListIsEmpty ? (Model.yearsInDatabase.Count() > 0 ? Model.yearsInDatabase.First() : DateTime.Now.Year) : Model.list.First().Date.Year)");
+
+                $("#monthSelect").val("@modelStartMonth");
+
+                $("#@(monthsUsedMoreThanOne? "radioYear" : "radioMonth")").prop("checked", true);
+
+            });
+        </script>
+    }
+
+    <h1 class="center">Просмотр архивов погоды</h1>
+    <table class="">
+        <tr class="withoutborder">
+            <td class="withoutborder">
+                @using (Html.BeginForm("WeatherElementsList", "WeatherData", FormMethod.Get))
+                {
+                    <table class="withoutborder">
+                        <tr class="withoutborder">
+                            <td class="withoutborder acrossinputradio" style="text-align: right">
+                                за год <input type="radio" name="navigationMethod" value="year" id="radioYear" />
+                            </td>
+                            <td class="withoutborder">
+                                <select class="input min-width-120" id="yearSelect" name="year">
+                                    @foreach (var year in Model.yearsInDatabase.OrderBy(y => y))
+                                    {
+                                        <option value="@year">@year</option>
+                                    }
+                                </select>
+                            </td>
+                            <td class="withoutborder">
+                            </td>
+                        </tr>
+                        <tr class="withoutborder">
+                            <td class="withoutborder acrossinputradio" style="text-align: right">
+                                за месяц <input type="radio" name="navigationMethod" value="month" id="radioMonth" checked />
+                            </td>
+                            <td class="withoutborder">
+                                <select class="input min-width-120" id="monthSelect" @(monthsUsedMoreThanOne ? "hidden=\"hidden\"" : "") name="month">
+                                    <option value="January">Январь</option>
+                                    <option value="February">Февраль</option>
+                                    <option value="March">Март</option>
+                                    <option value="April">Апрель</option>
+                                    <option value="May">май</option>
+                                    <option value="June">Июнь</option>
+                                    <option value="July">Июль</option>
+                                    <option value="August">Август</option>
+                                    <option value="September">Сентябрь</option>
+                                    <option value="October">Октябрь</option>
+                                    <option value="November">Ноябрь</option>
+                                    <option value="December">Декабрь</option>
+                                </select>
+                            </td>
+                            <td class="withoutborder">
+                                <input class="input" type="submit" value="⭸" />
+                            </td>
+                        </tr>
+                    </table>
+                }
+            </td>
+        <tr />
+    </table>
+
+
+    <div class="scrollable tableouterborder center maxh-700">
+
+        <table class="">
+            <thead>
+                <tr>
+                    <th>
+                        дата
+                    </th>
+                    <th>
+                        время<br />(МСК)
+                    </th>
+                    <th>
+                        температура<br />воздуха, ℃
+                    </th>
+                    <th>
+                        влажность<br />воздуха, %
+                    </th>
+                    <th>
+                        точка<br />росы, ℃
+                    </th>
+                    <th>
+                        атм.<br />давление
+                    </th>
+                    <th>
+                        ветер, м/с
+                    </th>
+                    <th>
+                        облачность, %
+                    </th>
+                    <th>
+                        нижняя граница<br />облачности, м
+                    </th>
+                    <th>
+                        горизонтальная<br />видимость, км
+                    </th>
+                    <th class="textleft">
+                        погодные явления
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="">
+                @foreach (var modelItem in Model.list)
+                {
+                    <tr>
+                        <td>
+                            @(modelItem.Date.ToShortDateString())
+                        </td>
+                        <td>
+                            @(modelItem.Date.ToShortTimeString())
+                        </td>
+                        <td>
+                            @(modelItem.TemperatureInteger)@(modelItem.TemperatureFractional == 0 ? "" : "," + modelItem.TemperatureFractional)
+                        </td>
+                        <td>
+                            @(modelItem.HumidityInteger)@(modelItem.HumidityFractional == 0 ? "" : "," + modelItem.HumidityFractional)
+                        </td>
+                        <td>
+                            @(modelItem.DewPointInteger)@(modelItem.DewPointFractional == 0 ? "" : "," + modelItem.DewPointFractional)
+                        </td>
+                        <td>
+                            @(modelItem.Pressure)
+                        </td>
+                        <td>
+                            @(modelItem.WindSpeedInteger == 0 && modelItem.WindSpeedFractional == 0 ? "" : modelItem.WindSpeedInteger)@(modelItem.WindSpeedFractional == 0 ? "" : "," + modelItem.WindSpeedFractional)@(" " + modelItem.WindDirections)
+                        </td>
+                        <td>
+                            @(modelItem.Cloudy < 0 ? "" : modelItem.Cloudy)
+                        </td>
+                        <td>
+                            @(modelItem.CloudHeight)
+                        </td>
+                        <td>
+                            @(modelItem.HorizontalVisibilityInteger<0 ? "" : (modelItem.HorizontalVisibilityInteger == 0 ? "" : modelItem.HorizontalVisibilityInteger) + (modelItem.HorizontalVisibilityFractional == 0 ? "" : "," + modelItem.HorizontalVisibilityFractional))
+                        </td>
+                        <td class="textleft">
+                            @(modelItem.WeatherPhenomenon)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>*@
